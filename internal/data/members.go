@@ -2,7 +2,7 @@ package data
 
 import "time"
 
-type User struct {
+type Member struct {
 	ID        int64
 	Email     string
 	Name      string
