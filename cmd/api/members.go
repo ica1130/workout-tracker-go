@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -32,4 +33,12 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 		Weight int64  `json:"weight"`
 	}
 
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
 }
