@@ -22,3 +22,14 @@ func (app *application) getMembersHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Request) {
+
+	var input struct {
+		Email  string `json:"email"`
+		Name   string `json:"name"`
+		Height int64  `json:"height"`
+		Weight int64  `json:"weight"`
+	}
+
+}
