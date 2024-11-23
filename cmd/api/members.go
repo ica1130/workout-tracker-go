@@ -40,5 +40,12 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	member := &data.Member{
+		Email:  input.Email,
+		Name:   input.Name,
+		Height: input.Height,
+		Weight: input.Weight,
+	}
+
 	fmt.Fprintf(w, "%+v\n", input)
 }
