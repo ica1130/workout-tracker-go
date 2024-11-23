@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -47,5 +46,16 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 		Weight: input.Weight,
 	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	err = app.models.Members.Insert(member)
+	if err != nil {
+		http.Error(w, "there was an error while creating a member", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"member": member}, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+	}
 }
