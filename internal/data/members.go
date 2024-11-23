@@ -39,8 +39,32 @@ func (m MemberModel) Insert(member *Member) error {
 	return nil
 }
 
-func (m MemberModel) Get(id int64) (*Member, error) {
-	return nil, nil
+func (m MemberModel) GetByEmail(email string) (*Member, error) {
+	query := `
+		SELECT id, email, name, height, weight, created_at
+		FROM members
+		WHERE email = $1
+	`
+
+	var member Member
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+		&member.ID,
+		&member.Email,
+		&member.Name,
+		&member.Height,
+		&member.Weight,
+		&member.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &member, nil
 }
 
 func (m MemberModel) Update(member *Member) error {

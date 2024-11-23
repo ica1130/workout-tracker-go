@@ -2,24 +2,31 @@ package main
 
 import (
 	"net/http"
-	"time"
 
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
 )
 
-func (app *application) getMembersHandler(w http.ResponseWriter, r *http.Request) {
-	member := &data.Member{
-		ID:        1,
-		Email:     "ilijakrilovic@gmail.com",
-		Name:      "Ilija",
-		Height:    192,
-		Weight:    95,
-		CreatedAt: time.Now(),
+func (app *application) getMemberByEmailHandler(w http.ResponseWriter, r *http.Request) {
+
+	email := r.URL.Query().Get("email")
+
+	if email == "" {
+		http.Error(w, "email must be provided", http.StatusBadRequest)
+		return
 	}
 
-	err := app.writeJSON(w, http.StatusOK, envelope{"members": member}, nil)
+	member, err := app.models.Members.GetByEmail(email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "error while retreiving member", http.StatusInternalServerError)
+		app.logger.Printf("error while retreiving member: %v", err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"members": member}, nil)
+	if err != nil {
+		http.Error(w, "error while retreiving member", http.StatusInternalServerError)
+		app.logger.Printf("error while printing member: %v", err)
+		return
 	}
 }
 
