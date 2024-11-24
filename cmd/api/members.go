@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
 )
 
@@ -64,5 +67,59 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.logger.Printf("error: %v", err)
+	}
+}
+
+func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Request) {
+
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	member, err := app.models.Members.GetById(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			http.NotFound(w, r)
+		default:
+			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+			app.logger.Printf("error: %v", err)
+		}
+		return
+	}
+
+	var input struct {
+		Email  string `json:"email"`
+		Name   string `json:"name"`
+		Height int64  `json:"height"`
+		Weight int64  `json:"weight"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		http.Error(w, "error: bad reuqest", http.StatusBadRequest)
+		return
+	}
+
+	member.Email = input.Email
+	member.Name = input.Name
+	member.Height = input.Height
+	member.Weight = input.Weight
+
+	err = app.models.Members.Update(member)
+	if err != nil {
+		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"member": member}, nil)
+	if err != nil {
+		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
 	}
 }
