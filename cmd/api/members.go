@@ -3,9 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
-	"github.com/julienschmidt/httprouter"
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
 )
 
@@ -72,9 +70,8 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 
 func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Request) {
 
-	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 1 {
+	id, err := app.readIDParam(r)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -126,9 +123,8 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 func (app *application) deleteMemberHandler(w http.ResponseWriter, r *http.Request) {
 
-	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 1 {
+	id, err := app.readIDParam(r)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
