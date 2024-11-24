@@ -123,3 +123,32 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 }
+
+func (app *application) deleteMemberHandler(w http.ResponseWriter, r *http.Request) {
+
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	err = app.models.Members.Delete(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			http.NotFound(w, r)
+		default:
+			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+			app.logger.Printf("error: %v", err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "member sucessfully deleted"}, nil)
+	if err != nil {
+		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+}

@@ -126,5 +126,25 @@ func (m MemberModel) Update(member *Member) error {
 }
 
 func (m MemberModel) Delete(id int64) error {
+
+	query := `
+		DELETE FROM members
+		WHERE id = $1
+	`
+
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
 	return nil
 }
