@@ -72,8 +72,8 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := app.readIDParam(r)
-	if err != nil {
-		http.Error(w, "error: bad request", http.StatusBadRequest)
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 func (app *application) deleteMemberHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := app.readIDParam(r)
-	if err != nil {
+	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}

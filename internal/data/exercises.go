@@ -136,3 +136,25 @@ func (e ExerciseModel) Update(exercise *Exercise) error {
 	}
 	return nil
 }
+
+func (e ExerciseModel) Delete(id int64) error {
+	query := `
+		DELETE FROM exercises
+		WHERE id = $1
+	`
+	result, err := e.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
+	return nil
+}

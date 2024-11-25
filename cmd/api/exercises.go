@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -121,6 +122,34 @@ func (app *application) updateExerciseHandler(w http.ResponseWriter, r *http.Req
 	err = app.writeJSON(w, http.StatusOK, envelope{"exercise": exercise}, nil)
 	if err != nil {
 		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+}
+
+func (app *application) deleteExerciseHandler(w http.ResponseWriter, r *http.Request) {
+
+	id, err := app.readIDParam(r)
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	err = app.models.Exercises.Delete(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			http.NotFound(w, r)
+		default:
+			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+			app.logger.Printf("error: %v", err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"exercise": "exercise sucessfully deleted"}, nil)
+	if err != nil {
+		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
 		app.logger.Printf("error: %v", err)
 		return
 	}
