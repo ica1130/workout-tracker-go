@@ -14,6 +14,7 @@ type Member struct {
 	Height    int64     `json:"height"`
 	Weight    int64     `json:"weight"`
 	CreatedAt time.Time `json:"created_at"`
+	Version   int       `json:"-"`
 }
 
 type MemberModel struct {
@@ -24,7 +25,7 @@ func (m MemberModel) Insert(member *Member) error {
 	query := `
 		INSERT INTO members (email, name, height, weight)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, created_at
+		RETURNING id, created_at, version
 	`
 
 	args := []interface{}{member.Email, member.Name, member.Height, member.Weight}
@@ -32,7 +33,7 @@ func (m MemberModel) Insert(member *Member) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&member.ID, &member.CreatedAt)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&member.ID, &member.CreatedAt, &member.Version)
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func (m MemberModel) GetByEmail(email string) (*Member, error) {
 
 func (m MemberModel) GetById(id int64) (*Member, error) {
 	query := `
-	SELECT id, email, name, height, weight, created_at
+	SELECT id, email, name, height, weight, created_at, version
 	FROM members
 	WHERE id = $1
 	`
@@ -92,6 +93,7 @@ func (m MemberModel) GetById(id int64) (*Member, error) {
 		&member.Height,
 		&member.Weight,
 		&member.CreatedAt,
+		&member.Version,
 	)
 
 	if err != nil {
@@ -108,9 +110,10 @@ func (m MemberModel) GetById(id int64) (*Member, error) {
 
 func (m MemberModel) Update(member *Member) error {
 	query := `
-		UPDATE member
-		SET email = $1, name = $2, height = $3, weight = $4
-		WHERE id = $5
+		UPDATE members
+		SET email = $1, name = $2, height = $3, weight = $4, version = version + 1
+		WHERE id = $5 AND version = $6
+		RETURNING version
 	`
 
 	args := []interface{}{
@@ -118,10 +121,22 @@ func (m MemberModel) Update(member *Member) error {
 		member.Name,
 		member.Height,
 		member.Weight,
+		member.ID,
+		member.Version,
 	}
 
-	m.DB.QueryRow(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&member.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrRecordNotFound
+		default:
+			return err
+		}
+	}
 	return nil
 }
 

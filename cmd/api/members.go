@@ -72,7 +72,7 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	id, err := app.readIDParam(r)
 	if err != nil {
-		http.NotFound(w, r)
+		http.Error(w, "error: bad request", http.StatusBadRequest)
 		return
 	}
 
@@ -81,6 +81,7 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
 			http.NotFound(w, r)
+			app.logger.Printf("error: %v", err)
 		default:
 			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
 			app.logger.Printf("error: %v", err)
