@@ -75,3 +75,53 @@ func (app *application) getExercisesByCategoryHandler(w http.ResponseWriter, r *
 		app.logger.Printf("error: %v", err)
 	}
 }
+
+func (app *application) updateExerciseHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	exercise, err := app.models.Exercises.GetById(id)
+	if err != nil {
+		switch {
+		case err == data.ErrRecordNotFound:
+			http.NotFound(w, r)
+		default:
+			http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
+			app.logger.Printf("error: %v", err)
+		}
+		return
+	}
+
+	var input struct {
+		Name        string `json:"name"`
+		Category    string `json:"category"`
+		Description string `json:"description"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	exercise.Name = input.Name
+	exercise.Category = input.Category
+	exercise.Description = input.Description
+
+	err = app.models.Exercises.Update(exercise)
+	if err != nil {
+		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"exercise": exercise}, nil)
+	if err != nil {
+		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+}
