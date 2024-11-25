@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -77,4 +78,61 @@ func (e ExerciseModel) GetByCategory(category string) ([]*Exercise, error) {
 	}
 
 	return exercises, nil
+}
+
+func (e ExerciseModel) GetById(id int64) (*Exercise, error) {
+	query := `
+		SELECT id, name, category, description, version
+		FROM exercises
+		WHERE id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var exercise Exercise
+
+	err := e.DB.QueryRowContext(ctx, query, id).Scan(
+		&exercise.ID,
+		&exercise.Name,
+		&exercise.Category,
+		&exercise.Description,
+		&exercise.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &exercise, nil
+}
+
+func (e ExerciseModel) Update(exercise *Exercise) error {
+	query := `
+		UPDATE exercises
+		SET name = $1, category = $2, description = $3, version = version +1
+		WHERE id = $4 AND version = $5
+		RETURNING version
+		`
+
+	args := []interface{}{exercise.Name, exercise.Category, exercise.Description, exercise.ID, exercise.Version}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := e.DB.QueryRowContext(ctx, query, args...).Scan(&exercise.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrRecordNotFound
+		default:
+			return err
+		}
+	}
+	return nil
 }
