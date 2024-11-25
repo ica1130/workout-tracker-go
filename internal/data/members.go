@@ -43,7 +43,7 @@ func (m MemberModel) Insert(member *Member) error {
 
 func (m MemberModel) GetByEmail(email string) (*Member, error) {
 	query := `
-		SELECT id, email, name, height, weight, created_at
+		SELECT id, email, name, height, weight, created_at, version
 		FROM members
 		WHERE email = $1
 	`
@@ -60,6 +60,7 @@ func (m MemberModel) GetByEmail(email string) (*Member, error) {
 		&member.Height,
 		&member.Weight,
 		&member.CreatedAt,
+		&member.Version,
 	)
 
 	if err != nil {
