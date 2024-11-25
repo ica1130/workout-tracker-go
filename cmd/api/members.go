@@ -65,6 +65,7 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.logger.Printf("error: %v", err)
+		return
 	}
 }
 

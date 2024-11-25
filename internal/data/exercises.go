@@ -22,7 +22,7 @@ func (e ExerciseModel) Insert(exercise *Exercise) error {
 	query := `
 		INSERT INTO exercises (name, category, description)
 		VALUES ($1, $2, $3)
-		RETURNING id
+		RETURNING id, version
 		`
 
 	args := []interface{}{exercise.Name, exercise.Category, exercise.Description}
