@@ -12,7 +12,7 @@ type Exercise struct {
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	Description string `json:"description"`
-	Version     int    `json:"version"`
+	Version     int    `json:"-"`
 }
 
 type ExerciseModel struct {

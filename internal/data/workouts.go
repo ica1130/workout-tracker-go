@@ -11,7 +11,7 @@ type Workout struct {
 	MemberID int64            `json:"member_id"`
 	Date     time.Time        `json:"date"`
 	Details  []*WorkoutDetail `json:"details"`
-	Version  int              `json:"version"`
+	Version  int              `json:"-"`
 }
 
 type WorkoutDetail struct {
@@ -54,11 +54,13 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 	detailsQuery := `
 		INSERT INTO workout_details (workout_id, exercise_id, set, repetitions, weight)
 		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
 	`
 
 	for _, detail := range workout.Details {
-		args := []interface{}{workout.ID, detail.ExerciseID, detail.Set, detail.Repetitions, detail.Weight}
-		_, err := tx.Exec(detailsQuery, args...)
+		detail.WorkoutID = workout.ID
+		args := []interface{}{detail.WorkoutID, detail.ExerciseID, detail.Set, detail.Repetitions, detail.Weight}
+		err = tx.QueryRowContext(ctx, detailsQuery, args...).Scan(&detail.ID)
 		if err != nil {
 			tx.Rollback()
 			return err
