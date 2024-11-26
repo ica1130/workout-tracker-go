@@ -10,6 +10,7 @@ func (app *application) routes() *httprouter.Router {
 	router := httprouter.New()
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+
 	router.HandlerFunc(http.MethodGet, "/v1/members", app.getMemberByEmailHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/members", app.createMemberHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/members/:id", app.updateMemberHandler)
@@ -19,6 +20,8 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodGet, "/v1/exercises", app.getExercisesByCategoryHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/exercises/:id", app.updateExerciseHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/exercises/:id", app.deleteExerciseHandler)
+
+	router.HandlerFunc(http.MethodPost, "/v1/members/:id/workouts", app.createWorkoutHandler)
 
 	return router
 }
