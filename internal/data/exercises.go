@@ -8,7 +8,7 @@ import (
 )
 
 type Exercise struct {
-	ID          int64  `json:"id"`
+	ID          int64  `json:"-"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	Description string `json:"description"`

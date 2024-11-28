@@ -41,3 +41,24 @@ func (app *application) createWorkoutHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 }
+
+func (app *application) getAllWorkoutsByMemberIDHandler(w http.ResponseWriter, r *http.Request) {
+	memberID, err := app.readIDParam(r)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	workouts, err := app.models.Workouts.GetByMemberID(memberID)
+	if err != nil {
+		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"workouts": workouts}, nil)
+	if err != nil {
+		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+	}
+}

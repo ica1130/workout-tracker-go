@@ -25,6 +25,23 @@ type WorkoutDetail struct {
 	Weight      float64 `json:"weight"`
 }
 
+type WorkoutResponse struct {
+	ID       int64                    `json:"id"`
+	MemberID int64                    `json:"-"`
+	Date     time.Time                `json:"date"`
+	Details  []*WorkoutDetailResponse `json:"details"`
+	Version  int                      `json:"-"`
+}
+
+type WorkoutDetailResponse struct {
+	ID          int64    `json:"-"`
+	WorkoutID   int64    `json:"-"`
+	Exercise    Exercise `json:"exercise"`
+	Set         int      `json:"set"`
+	Repetitions int      `json:"repetitions"`
+	Weight      float64  `json:"weight"`
+}
+
 type WorkoutModel struct {
 	DB *sql.DB
 }
@@ -82,4 +99,66 @@ func (w WorkoutModel) Insert(workout *Workout) error {
 	}
 
 	return nil
+}
+
+func (w WorkoutModel) GetByMemberID(memberID int64) ([]*WorkoutResponse, error) {
+	query := `
+		SELECT 	w.id, w.date, wd.set, wd.repetitions, wd.weight, e.name, e.category, e.description 
+		FROM workouts w 
+		JOIN workout_details AS wd 
+		ON w.id = wd.workout_id
+		JOIN exercises e
+		ON e.id = wd.exercise_id
+		WHERE w.member_id = $1;
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := w.DB.QueryContext(ctx, query, memberID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	workouts := []*WorkoutResponse{}
+
+	for rows.Next() {
+		var workout WorkoutResponse
+		var detail WorkoutDetailResponse
+		var workoutFound bool
+
+		err := rows.Scan(
+			&workout.ID,
+			&workout.Date,
+			&detail.Set,
+			&detail.Repetitions,
+			&detail.Weight,
+			&detail.Exercise.Name,
+			&detail.Exercise.Category,
+			&detail.Exercise.Description,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, storedWorkout := range workouts {
+			if storedWorkout.ID == workout.ID {
+				storedWorkout.Details = append(storedWorkout.Details, &detail)
+				workoutFound = true
+			}
+		}
+
+		if !workoutFound {
+			workout.Details = append(workout.Details, &detail)
+			workouts = append(workouts, &workout)
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return workouts, nil
 }
