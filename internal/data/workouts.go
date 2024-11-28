@@ -121,12 +121,11 @@ func (w WorkoutModel) GetByMemberID(memberID int64) ([]*WorkoutResponse, error) 
 	}
 	defer rows.Close()
 
-	workouts := []*WorkoutResponse{}
+	workouts := make(map[int64]*WorkoutResponse)
 
 	for rows.Next() {
 		var workout WorkoutResponse
 		var detail WorkoutDetailResponse
-		var workoutFound bool
 
 		err := rows.Scan(
 			&workout.ID,
@@ -143,16 +142,12 @@ func (w WorkoutModel) GetByMemberID(memberID int64) ([]*WorkoutResponse, error) 
 			return nil, err
 		}
 
-		for _, storedWorkout := range workouts {
-			if storedWorkout.ID == workout.ID {
-				storedWorkout.Details = append(storedWorkout.Details, &detail)
-				workoutFound = true
-			}
-		}
-
-		if !workoutFound {
+		if _, ok := workouts[workout.ID]; !ok {
 			workout.Details = append(workout.Details, &detail)
-			workouts = append(workouts, &workout)
+			workouts[workout.ID] = &workout
+		} else {
+			updateWorkout := workouts[workout.ID]
+			updateWorkout.Details = append(updateWorkout.Details, &detail)
 		}
 	}
 
@@ -160,5 +155,11 @@ func (w WorkoutModel) GetByMemberID(memberID int64) ([]*WorkoutResponse, error) 
 		return nil, err
 	}
 
-	return workouts, nil
+	workoutsSlice := make([]*WorkoutResponse, 0, len(workouts))
+	for _, workout := range workouts {
+		fmt.Println(workout.ID)
+		workoutsSlice = append(workoutsSlice, workout)
+	}
+
+	return workoutsSlice, nil
 }
