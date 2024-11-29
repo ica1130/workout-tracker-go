@@ -23,6 +23,7 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodPost, "/v1/members/:id/workouts", app.createWorkoutHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/members/:id/workouts", app.getAllWorkoutsByMemberIDHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/members/:id/workouts/:workout_id", app.deleteWorkoutHandler)
 
 	return router
 }

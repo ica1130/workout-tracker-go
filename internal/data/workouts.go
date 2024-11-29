@@ -163,3 +163,25 @@ func (w WorkoutModel) GetByMemberID(memberID int64) ([]*WorkoutResponse, error) 
 
 	return workoutsSlice, nil
 }
+
+func (w WorkoutModel) Delete(id int64) error {
+	query := `
+		DELETE FROM workouts
+		WHERE id = $1
+	`
+	result, err := w.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
+	return nil
+}
