@@ -52,6 +52,7 @@ A **Workout Tracker** application built with Go, designed to manage workout rout
   - `DELETE /exercises/id`
 - **Workouts**:
   - `GET /member/id/workouts`
+  - `POST /member/id/workouts`
 
 ## Project Structure
 ```plaintext
@@ -71,8 +72,10 @@ workout-tracker-go/
 ```
 
 ## Future Enhancements
-- Authentication and Authorization for users.
-- Advanced analytics for workout tracking.
+- Authentication for members.
+- Filtered search for workouts.
+- Redis for caching.
+- Improved logging.
 
 ## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request with your changes.
