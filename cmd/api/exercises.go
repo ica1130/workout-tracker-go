@@ -54,39 +54,35 @@ func (app *application) getExercisesByCategoryHandler(w http.ResponseWriter, r *
 	category := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("category")))
 
 	if category == "" || !allowedCategories[category] {
-		http.Error(w, "invalid category", http.StatusBadRequest)
+		app.badRequestResponse(w, r, errors.New("missing or invalid category parameter"))
 		return
 	}
 
 	exercises, err := app.models.Exercises.GetByCategory(category)
 	if err != nil {
-		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"exercises": exercises}, nil)
 	if err != nil {
-		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
 func (app *application) updateExerciseHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
-		http.NotFound(w, r)
-		return
+		app.notFoundResponse(w, r)
 	}
 
 	exercise, err := app.models.Exercises.GetById(id)
 	if err != nil {
 		switch {
 		case err == data.ErrRecordNotFound:
-			http.NotFound(w, r)
+			app.notFoundResponse(w, r)
 		default:
-			http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
-			app.logger.Printf("error: %v", err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
@@ -99,7 +95,7 @@ func (app *application) updateExerciseHandler(w http.ResponseWriter, r *http.Req
 
 	err = app.readJSON(w, r, &input)
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
@@ -109,16 +105,13 @@ func (app *application) updateExerciseHandler(w http.ResponseWriter, r *http.Req
 
 	err = app.models.Exercises.Update(exercise)
 	if err != nil {
-		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"exercise": exercise}, nil)
 	if err != nil {
-		http.Error(w, "the server encountered a problem and could not process your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
-		return
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
@@ -126,26 +119,22 @@ func (app *application) deleteExerciseHandler(w http.ResponseWriter, r *http.Req
 
 	id, err := app.readIDParam(r)
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
-		return
+		app.notFoundResponse(w, r)
 	}
 
 	err = app.models.Exercises.Delete(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			http.NotFound(w, r)
+			app.notFoundResponse(w, r)
 		default:
-			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-			app.logger.Printf("error: %v", err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"exercise": "exercise sucessfully deleted"}, nil)
 	if err != nil {
-		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
-		return
+		app.serverErrorResponse(w, r, err)
 	}
 }
