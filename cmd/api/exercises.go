@@ -28,9 +28,7 @@ func (app *application) createExerciseHandler(w http.ResponseWriter, r *http.Req
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.logger.Printf("error: %v", err)
-		return
+		app.badRequestResponse(w, r, err)
 	}
 
 	exercise := &data.Exercise{
@@ -41,16 +39,13 @@ func (app *application) createExerciseHandler(w http.ResponseWriter, r *http.Req
 
 	err = app.models.Exercises.Insert(exercise)
 	if err != nil {
-		http.Error(w, "there was an error while creating an exercise", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"exercise": exercise}, nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
-		return
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
