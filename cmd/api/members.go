@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
 )
@@ -70,7 +71,19 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"member": member}, nil)
+	token, err := app.models.Tokens.New(member.ID, 3*24*time.Hour, "activation")
+	if err != nil {
+		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
+	}
+
+	responseEnvelope := envelope{
+		"member":           member,
+		"activation_token": token.Plaintext,
+	}
+
+	err = app.writeJSON(w, http.StatusCreated, responseEnvelope, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.logger.Printf("error: %v", err)
