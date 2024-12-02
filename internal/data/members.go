@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Member struct {
@@ -20,6 +22,18 @@ type Member struct {
 type password struct {
 	plaintext *string
 	hash      []byte
+}
+
+func (p *password) Set(plain string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(plain), 12)
+	if err != nil {
+		return err
+	}
+
+	p.plaintext = &plain
+	p.hash = hash
+
+	return nil
 }
 
 type MemberModel struct {
