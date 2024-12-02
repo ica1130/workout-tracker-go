@@ -59,11 +59,11 @@ type MemberModel struct {
 func (m MemberModel) Insert(member *Member) error {
 	query := `
 		INSERT INTO members (email, name, password_hash, activated, height, weight)
-		VALUES ($1, $2, $3, $4)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, version
 	`
 
-	args := []interface{}{member.Email, member.Name, member.Password, member.Activated, member.Height, member.Weight}
+	args := []interface{}{member.Email, member.Name, member.Password.hash, member.Activated, member.Height, member.Weight}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

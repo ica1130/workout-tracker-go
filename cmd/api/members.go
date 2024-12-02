@@ -34,10 +34,11 @@ func (app *application) getMemberByEmailHandler(w http.ResponseWriter, r *http.R
 func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		Email  string `json:"email"`
-		Name   string `json:"name"`
-		Height int64  `json:"height"`
-		Weight int64  `json:"weight"`
+		Email    string `json:"email"`
+		Name     string `json:"name"`
+		Password string `json:"password"`
+		Height   int64  `json:"height"`
+		Weight   int64  `json:"weight"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -48,10 +49,18 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	member := &data.Member{
-		Email:  input.Email,
-		Name:   input.Name,
-		Height: input.Height,
-		Weight: input.Weight,
+		Email:     input.Email,
+		Name:      input.Name,
+		Activated: false,
+		Height:    input.Height,
+		Weight:    input.Weight,
+	}
+
+	err = member.Password.Set(input.Password)
+	if err != nil {
+		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
+		app.logger.Printf("error: %v", err)
+		return
 	}
 
 	err = app.models.Members.Insert(member)
