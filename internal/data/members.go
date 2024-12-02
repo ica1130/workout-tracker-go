@@ -13,6 +13,8 @@ type Member struct {
 	ID        int64     `json:"id"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
+	Password  password  `json:"-"`
+	Activated bool      `json:"activated"`
 	Height    int64     `json:"height"`
 	Weight    int64     `json:"weight"`
 	CreatedAt time.Time `json:"created_at"`
