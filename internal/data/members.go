@@ -36,6 +36,20 @@ func (p *password) Set(plain string) error {
 	return nil
 }
 
+func (p *password) Compare() (bool, error) {
+	err := bcrypt.CompareHashAndPassword(p.hash, []byte(*p.plaintext))
+	if err != nil {
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
 type MemberModel struct {
 	DB *sql.DB
 }
