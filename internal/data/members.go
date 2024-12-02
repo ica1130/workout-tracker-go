@@ -58,19 +58,24 @@ type MemberModel struct {
 
 func (m MemberModel) Insert(member *Member) error {
 	query := `
-		INSERT INTO members (email, name, height, weight)
+		INSERT INTO members (email, name, password_hash, activated, height, weight)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, version
 	`
 
-	args := []interface{}{member.Email, member.Name, member.Height, member.Weight}
+	args := []interface{}{member.Email, member.Name, member.Password, member.Activated, member.Height, member.Weight}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&member.ID, &member.CreatedAt, &member.Version)
 	if err != nil {
-		return err
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "members_email_key"`:
+			return errors.New("duplicate email")
+		default:
+			return err
+		}
 	}
 
 	return nil
