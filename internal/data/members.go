@@ -17,6 +17,11 @@ type Member struct {
 	Version   int       `json:"-"`
 }
 
+type password struct {
+	plaintext *string
+	hash      []byte
+}
+
 type MemberModel struct {
 	DB *sql.DB
 }
