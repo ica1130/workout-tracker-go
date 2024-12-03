@@ -172,3 +172,45 @@ func (app *application) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 }
+
+func (app *application) activateMemberHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TokenPlain string `json:"token"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	member, err := app.models.Members.GetForToken("activation", input.TokenPlain)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	member.Activated = true
+
+	err = app.models.Members.Update(member)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.models.Tokens.DeleteAllForMember("activation", member.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"member": member}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
