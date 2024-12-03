@@ -143,26 +143,23 @@ func (app *application) deleteMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	id, err := app.readIDParam(r)
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
-		return
+		app.notFoundResponse(w, r)
 	}
 
 	err = app.models.Members.Delete(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			http.NotFound(w, r)
+			app.notFoundResponse(w, r)
 		default:
-			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-			app.logger.Printf("error: %v", err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "member sucessfully deleted"}, nil)
 	if err != nil {
-		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 }
