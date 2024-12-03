@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"time"
@@ -204,3 +205,56 @@ func (m MemberModel) Delete(id int64) error {
 
 	return nil
 }
+
+func (m MemberModel) GetForToken(tokenScope, tokenPlain string) (*Member, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlain))
+
+	query := `
+		SELECT m.id, m.email, m.name, m.password_hash, m.activated, m.height, m.weight, m.created_at, m.version
+		FROM members m
+		INNER JOIN tokens
+		ON m.id = tokens.member_id
+		WHERE tokens.hash = $1
+		AND tokens.scope = $2
+		AND tokens.expiry > $3 
+	`
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	var member Member
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&member.ID,
+		&member.Email,
+		&member.Name,
+		&member.Password.hash,
+		&member.Activated,
+		&member.Height,
+		&member.Weight,
+		&member.CreatedAt,
+		&member.Version,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &member, nil
+}
+
+/* 	ID        int64     `json:"id"`
+Email     string    `json:"email"`
+Name      string    `json:"name"`
+Password  password  `json:"-"`
+Activated bool      `json:"activated"`
+Height    int64     `json:"height"`
+Weight    int64     `json:"weight"`
+CreatedAt time.Time `json:"created_at"`
+Version   int       `json:"-"` */
