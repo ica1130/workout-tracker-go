@@ -13,21 +13,24 @@ func (app *application) getMemberByEmailHandler(w http.ResponseWriter, r *http.R
 	email := r.URL.Query().Get("email")
 
 	if email == "" {
-		http.Error(w, "email must be provided", http.StatusBadRequest)
+		app.badRequestResponse(w, r, errors.New("missing email parameter"))
 		return
 	}
 
 	member, err := app.models.Members.GetByEmail(email)
 	if err != nil {
-		http.Error(w, "error while retreiving member", http.StatusInternalServerError)
-		app.logger.Printf("error while retreiving member: %v", err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+			return
+		}
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"members": member}, nil)
 	if err != nil {
-		http.Error(w, "error while retreiving member", http.StatusInternalServerError)
-		app.logger.Printf("error while printing member: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 }
