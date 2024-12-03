@@ -15,7 +15,7 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodPost, "/v1/members", app.createMemberHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/members/:id", app.updateMemberHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/members/:id", app.deleteMemberHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/members/activated", app.activateMemberHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/members/:id/activate", app.activateMemberHandler)
 
 	router.HandlerFunc(http.MethodPost, "/v1/exercises", app.createExerciseHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/exercises", app.getExercisesByCategoryHandler)
