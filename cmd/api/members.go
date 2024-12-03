@@ -47,8 +47,7 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.logger.Printf("error: %v", err)
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
@@ -62,22 +61,19 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	err = member.Password.Set(input.Password)
 	if err != nil {
-		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.models.Members.Insert(member)
 	if err != nil {
-		http.Error(w, "there was an error while creating a member", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	token, err := app.models.Tokens.New(member.ID, 3*24*time.Hour, "activation")
 	if err != nil {
-		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
@@ -88,8 +84,7 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	err = app.writeJSON(w, http.StatusCreated, responseEnvelope, nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 }
