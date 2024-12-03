@@ -150,17 +150,33 @@ func (m MemberModel) GetById(id int64) (*Member, error) {
 	return &member, nil
 }
 
+/*
+	type Member struct {
+	ID        int64     `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Password  password  `json:"-"`
+	Activated bool      `json:"activated"`
+	Height    int64     `json:"height"`
+	Weight    int64     `json:"weight"`
+	CreatedAt time.Time `json:"created_at"`
+	Version   int       `json:"-"`
+}
+*/
+
 func (m MemberModel) Update(member *Member) error {
 	query := `
 		UPDATE members
-		SET email = $1, name = $2, height = $3, weight = $4, version = version + 1
-		WHERE id = $5 AND version = $6
+		SET email = $1, name = $2, password_hash = $3, activated = $4, height = $5, weight = $6, version = version + 1
+		WHERE id = $7 AND version = $8
 		RETURNING version
 	`
 
 	args := []interface{}{
 		member.Email,
 		member.Name,
+		member.Password.hash,
+		member.Activated,
 		member.Height,
 		member.Weight,
 		member.ID,
@@ -248,13 +264,3 @@ func (m MemberModel) GetForToken(tokenScope, tokenPlain string) (*Member, error)
 
 	return &member, nil
 }
-
-/* 	ID        int64     `json:"id"`
-Email     string    `json:"email"`
-Name      string    `json:"name"`
-Password  password  `json:"-"`
-Activated bool      `json:"activated"`
-Height    int64     `json:"height"`
-Weight    int64     `json:"weight"`
-CreatedAt time.Time `json:"created_at"`
-Version   int       `json:"-"` */
