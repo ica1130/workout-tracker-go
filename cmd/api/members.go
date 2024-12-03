@@ -93,20 +93,7 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	id, err := app.readIDParam(r)
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
-		return
-	}
-
-	member, err := app.models.Members.GetById(id)
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			http.NotFound(w, r)
-			app.logger.Printf("error: %v", err)
-		default:
-			http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-			app.logger.Printf("error: %v", err)
-		}
+		app.notFoundResponse(w, r)
 		return
 	}
 
@@ -119,7 +106,18 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	err = app.readJSON(w, r, &input)
 	if err != nil {
-		http.Error(w, "error: bad reuqest", http.StatusBadRequest)
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	member, err := app.models.Members.GetById(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
@@ -130,15 +128,13 @@ func (app *application) updateMemberHandler(w http.ResponseWriter, r *http.Reque
 
 	err = app.models.Members.Update(member)
 	if err != nil {
-		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"member": member}, nil)
 	if err != nil {
-		http.Error(w, "error: server encountered an error while processing your request", http.StatusInternalServerError)
-		app.logger.Printf("error: %v", err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 }
