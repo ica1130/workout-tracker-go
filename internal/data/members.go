@@ -10,6 +10,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var AnonymousUser = &Member{}
+
 type Member struct {
 	ID        int64     `json:"id"`
 	Email     string    `json:"email"`
@@ -25,6 +27,10 @@ type Member struct {
 type password struct {
 	plaintext *string
 	hash      []byte
+}
+
+func (m *Member) IsAnonymous() bool {
+	return m == AnonymousUser
 }
 
 func (p *password) Set(plain string) error {
