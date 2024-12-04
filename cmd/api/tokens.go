@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,7 +23,9 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
-	user, err := app.models.Members.GetByEmail(input.Email)
+	fmt.Println(input.Password)
+
+	member, err := app.models.Members.GetByEmail(input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -33,7 +36,8 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
-	match, err := user.Password.Compare(input.Password)
+	match, err := member.Password.Compare(input.Password)
+
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -45,7 +49,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	}
 
 	var claims jwt.Claims
-	claims.Subject = strconv.FormatInt(user.ID, 10)
+	claims.Subject = strconv.FormatInt(member.ID, 10)
 	claims.Issued = jwt.NewNumericTime(time.Now())
 	claims.NotBefore = jwt.NewNumericTime(time.Now())
 	claims.Expires = jwt.NewNumericTime(time.Now().Add(24 * time.Hour))
