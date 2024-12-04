@@ -3,8 +3,11 @@ package main
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/pascaldekloe/jwt"
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
 )
 
@@ -28,7 +31,34 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		token := headerParts[1]
 
-		member, err := app.models.Members.GetForToken("authentication", token)
+		claims, err := jwt.HMACCheck([]byte(token), []byte(app.config.jwt.secret))
+		if err != nil {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		if !claims.Valid(time.Now()) {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		if claims.Issuer != "workout-tracker-go.ilijakrilovic.com" {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		if claims.AcceptAudience("workout-tracker-go.ilijakrilovic.com") {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		memberID, err := strconv.ParseInt(claims.Subject, 10, 64)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+		member, err := app.models.Members.GetById(memberID)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
