@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,8 +21,6 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		app.badRequestResponse(w, r, err)
 		return
 	}
-
-	fmt.Println(input.Password)
 
 	member, err := app.models.Members.GetByEmail(input.Email)
 	if err != nil {
