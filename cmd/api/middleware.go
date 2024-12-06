@@ -47,7 +47,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		if claims.AcceptAudience("workout-tracker-go.ilijakrilovic.com") {
+		if !claims.AcceptAudience("workout-tracker-go.ilijakrilovic.com") {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
