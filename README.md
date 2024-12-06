@@ -95,4 +95,4 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 This project is licensed under the MIT License.
 
 ## Contact
-For questions or feedback, reach out to **[Your Name](mailto:ilijakrilovic@gmail.com)**.
+For questions or feedback, reach out to **[Ilija Krilovic](mailto:ilijakrilovic@gmail.com)**.
