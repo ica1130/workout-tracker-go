@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pascaldekloe/jwt"
+	"golang.org/x/time/rate"
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
 )
 
@@ -70,6 +71,20 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		r = app.contextSetMember(r, member)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) rateLimit(next http.Handler) http.Handler {
+
+	limiter := rate.NewLimiter(3, 6)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !limiter.Allow() {
+			app.rateLimitExceededResponse(w, r)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})
