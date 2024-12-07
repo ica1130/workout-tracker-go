@@ -8,6 +8,7 @@ A **Workout Tracker** application built with Go, designed to manage workout rout
 - **Workout Tracking**: Manage workouts and their details.
 - **Exercise Management**: Add, update, delete, and fetch exercises.
 - **Database Migrations**: Predefined scripts for database setup.
+- **Rate limiter**: Enforced a global rate limiter for this API.
 - **JWT Authentication**: Secure the API using JSON Web Tokens (JWT). Members can obtain authentication tokens by sending their credentials to a designated endpoint.
 - **User Account Activation**: Implemented an account activation endpoint. For now, the activation token is returned in the response when a member is created (instead of being sent via email). They can be activated by sending a PUT request to /v1/members/:id/activate
 
