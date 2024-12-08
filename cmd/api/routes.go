@@ -17,14 +17,14 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodDelete, "/v1/members/:id", app.deleteMemberHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/members/:id/activate", app.activateMemberHandler)
 
-	router.HandlerFunc(http.MethodPost, "/v1/exercises", app.createExerciseHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/exercises", app.getExercisesByCategoryHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/exercises/:id", app.updateExerciseHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/exercises/:id", app.deleteExerciseHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/exercises", app.requireActivatedMember(app.createExerciseHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/exercises", app.requireActivatedMember(app.getExercisesByCategoryHandler))
+	router.HandlerFunc(http.MethodPut, "/v1/exercises/:id", app.requireActivatedMember(app.updateExerciseHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/exercises/:id", app.requireActivatedMember(app.deleteExerciseHandler))
 
-	router.HandlerFunc(http.MethodPost, "/v1/members/:id/workouts", app.createWorkoutHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/members/:id/workouts", app.getAllWorkoutsByMemberIDHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/members/:id/workouts/:workout_id", app.deleteWorkoutHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/members/:id/workouts", app.requireActivatedMember(app.createWorkoutHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/members/:id/workouts", app.requireActivatedMember(app.getAllWorkoutsByMemberIDHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/members/:id/workouts/:workout_id", app.requireActivatedMember(app.deleteWorkoutHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
