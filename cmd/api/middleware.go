@@ -89,3 +89,21 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) requireActivatedMember(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		member := app.contextGetMember(r)
+
+		if member.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+
+		if !member.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
