@@ -3,7 +3,7 @@ package main
 import "net/http"
 
 func (app *application) logError(r *http.Request, err error) {
-	app.logger.Println(err)
+	app.logger.Printf("request url: %s \nrequest method: %s \nerror: %v", r.URL.Path, r.Method, err)
 }
 
 func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message interface{}) {
