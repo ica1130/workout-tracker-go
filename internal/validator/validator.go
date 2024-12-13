@@ -21,3 +21,7 @@ func (v *Validator) Check(ok bool, key, message string) {
 		v.AddError(key, message)
 	}
 }
+
+func (v *Validator) Valid() bool {
+	return len(v.Errors) == 0
+}
