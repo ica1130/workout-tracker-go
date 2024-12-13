@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"workout-tracker-go.ilijakrilovic.com/internal/validator"
 )
 
 var AnonymousUser = &Member{}
@@ -57,6 +58,11 @@ func (p *password) Compare(plaintextPassword string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func ValidateEmail(v *validator.Validator, email string) {
+	v.Check(email != "", "email", "must be provided")
+	v.Check(validator.IsValidEmail(email), "email", "must be a valid email")
 }
 
 type MemberModel struct {
