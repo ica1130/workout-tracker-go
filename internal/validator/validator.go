@@ -9,3 +9,9 @@ func New() *Validator {
 		Errors: make(map[string]string),
 	}
 }
+
+func (v *Validator) AddError(key, message string) {
+	if _, exists := v.Errors[key]; !exists {
+		v.Errors[key] = message
+	}
+}
