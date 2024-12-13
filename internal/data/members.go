@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+	"unicode"
 
 	"golang.org/x/crypto/bcrypt"
 	"workout-tracker-go.ilijakrilovic.com/internal/validator"
@@ -63,6 +64,49 @@ func (p *password) Compare(plaintextPassword string) (bool, error) {
 func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(email != "", "email", "must be provided")
 	v.Check(validator.IsValidEmail(email), "email", "must be a valid email")
+}
+
+func ValidatePassword(v *validator.Validator, password string) {
+
+	v.Check(password != "", "password", "must be provided")
+	v.Check(len(password) >= 8, "password", "must be at least 8 bytes long")
+	v.Check(len(password) <= 72, "password", "must not be more than 72 bytes long")
+
+	var (
+		hasUpperCase bool
+		hasLowerCase bool
+		hasDigit     bool
+		hasSpecial   bool
+	)
+
+	for _, char := range password {
+		if unicode.IsUpper(char) {
+			hasUpperCase = true
+		} else if unicode.IsLower(char) {
+			hasLowerCase = true
+		} else if unicode.IsDigit(char) {
+			hasDigit = true
+		} else {
+			hasSpecial = true
+		}
+	}
+
+	v.Check(hasUpperCase, "password", "must contain at least one uppercase letter")
+	v.Check(hasLowerCase, "password", "must contain at least one lowercase letter")
+	v.Check(hasDigit, "password", "must contain at least one digit")
+	v.Check(hasSpecial, "password", "must contain at least one special character")
+}
+
+func ValidateMember(v *validator.Validator, member *Member) {
+	v.Check(member.Name != "", "name", "must be provided")
+	v.Check(len(member.Name) <= 100, "name", "must not be more than 100 bytes long")
+
+	ValidateEmail(v, member.Email)
+
+	if member.Password.plaintext != nil {
+		ValidatePassword(v, *member.Password.plaintext)
+	}
+
 }
 
 type MemberModel struct {
