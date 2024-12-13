@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
+	"workout-tracker-go.ilijakrilovic.com/internal/validator"
 )
 
 func (app *application) getMemberByEmailHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +63,13 @@ func (app *application) createMemberHandler(w http.ResponseWriter, r *http.Reque
 	err = member.Password.Set(input.Password)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	if data.ValidateMember(v, member); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
