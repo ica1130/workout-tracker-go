@@ -27,11 +27,17 @@ type Exercise struct {
 	Version     int    `json:"-"`
 }
 
+func ValidateCategory(v *validator.Validator, category string) {
+	v.Check(category != "", "category", "must be provided")
+	v.Check(allowedCategories[category], "category", "invalid category")
+}
+
 func ValidateExercise(v *validator.Validator, exercise *Exercise) {
 	v.Check(exercise.Name != "", "name", "must be provided")
 	v.Check(len(exercise.Name) <= 50, "name", "must not be more than 50 butes long")
-	v.Check(exercise.Category != "", "category", "must be provided")
-	v.Check(allowedCategories[exercise.Category], "category", "invalid category")
+
+	ValidateCategory(v, exercise.Category)
+
 	v.Check(len(exercise.Description) <= 1000, "description", "must not be more than 1000 bytes long")
 }
 
