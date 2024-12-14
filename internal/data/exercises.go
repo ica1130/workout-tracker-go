@@ -5,7 +5,19 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"workout-tracker-go.ilijakrilovic.com/internal/validator"
 )
+
+var allowedCategories = map[string]bool{
+	"shoulders": true,
+	"chest":     true,
+	"back":      true,
+	"arms":      true,
+	"core":      true,
+	"legs":      true,
+	"cardio":    true,
+}
 
 type Exercise struct {
 	ID          int64  `json:"-"`
@@ -13,6 +25,14 @@ type Exercise struct {
 	Category    string `json:"category"`
 	Description string `json:"description"`
 	Version     int    `json:"-"`
+}
+
+func ValidateExercise(v *validator.Validator, exercise *Exercise) {
+	v.Check(exercise.Name != "", "name", "must be provided")
+	v.Check(len(exercise.Name) <= 50, "name", "must not be more than 50 butes long")
+	v.Check(exercise.Category != "", "category", "must be provided")
+	v.Check(allowedCategories[exercise.Category], "category", "invalid category")
+	v.Check(len(exercise.Description) <= 1000, "description", "must not be more than 1000 bytes long")
 }
 
 type ExerciseModel struct {
