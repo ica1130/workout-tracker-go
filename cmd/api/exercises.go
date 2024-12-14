@@ -6,17 +6,8 @@ import (
 	"strings"
 
 	"workout-tracker-go.ilijakrilovic.com/internal/data"
+	"workout-tracker-go.ilijakrilovic.com/internal/validator"
 )
-
-var allowedCategories = map[string]bool{
-	"shoulders": true,
-	"chest":     true,
-	"back":      true,
-	"arms":      true,
-	"core":      true,
-	"legs":      true,
-	"cardio":    true,
-}
 
 func (app *application) createExerciseHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -37,6 +28,13 @@ func (app *application) createExerciseHandler(w http.ResponseWriter, r *http.Req
 		Description: input.Description,
 	}
 
+	v := validator.New()
+
+	if data.ValidateExercise(v, exercise); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
 	err = app.models.Exercises.Insert(exercise)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -53,8 +51,10 @@ func (app *application) getExercisesByCategoryHandler(w http.ResponseWriter, r *
 
 	category := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("category")))
 
-	if category == "" || !allowedCategories[category] {
-		app.badRequestResponse(w, r, errors.New("missing or invalid category parameter"))
+	v := validator.New()
+
+	if data.ValidateCategory(v, category); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
